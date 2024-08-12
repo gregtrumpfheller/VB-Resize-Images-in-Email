@@ -1,0 +1,67 @@
+ Public Sub ResizeImagesMail()
+    Dim objItem As Object
+    Dim objInsp As Outlook.Inspector
+    
+    ' Add reference to Word library
+    ' in VBA Editor, Tools, References
+    Dim objWord As Word.Application
+    Dim objDoc As Word.Document
+    Dim objSel As Word.Selection
+    On Error Resume Next
+
+Dim targetHeight As Integer
+Dim oShp As Shape
+Dim oILShp As InlineShape
+Dim picSize As Variant
+
+' make all images (both inline and floating)
+' 13 cm wide while preserving aspect ratio
+picSize = 20
+   
+'Reference the current Outlook item
+    Set objItem = Application.ActiveInspector.CurrentItem
+    If Not objItem Is Nothing Then
+        If objItem.Class = olMail Then
+            Set objInsp = objItem.GetInspector
+            If objInsp.EditorType = olEditorWord Then
+                Set objDoc = objInsp.WordEditor
+                Set objWord = objDoc.Application
+                Set objSel = objWord.Selection
+
+       With objSel
+       ' Formatting code goes here
+       
+        For Each oShp In objSel.ShapeRange
+        With oShp
+        .LockAspectRatio = msoTrue
+        .Height = AspectHt(.Width, .Height, CentimetersToPoints(picSize))
+        .Width = CentimetersToPoints(picSize)
+        End With
+        Next
+        For Each oILShp In objSel.InlineShapes
+        With oILShp
+        .LockAspectRatio = msoTrue
+        .Height = AspectHt(.Width, .Height, CentimetersToPoints(picSize))
+        .Width = CentimetersToPoints(picSize)
+        End With
+        Next
+
+       End With
+
+            End If
+        End If
+    End If
+    
+    Set objItem = Nothing
+    Set objWord = Nothing
+    Set objSel = Nothing
+    Set objInsp = Nothing
+End Sub
+
+Private Function AspectHt(ByVal origWd As Long, ByVal origHt As Long, ByVal newWd As Long) As Long
+If origWd <> 0 Then
+AspectHt = (CSng(origHt) / CSng(origWd)) * newWd
+Else
+AspectHt = 0
+End If
+End Function
